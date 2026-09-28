@@ -39,6 +39,8 @@ def main() -> int:
         kind = KINDS.get(it.get("kind"), "Акт")
         eff = f" Вступает в силу: {it['effective']}." if it.get("effective") else ""
         desc = f"[{kind} · {it.get('source','')}] {it.get('summary','')}{eff}"
+        for c in it.get("changes") or []:
+            desc += f"\n\n{c.get('where','')}\nБЫЛО: {c.get('before','')}\nСТАЛО: {c.get('after','')}"
         out += ["<item>",
                 f"<title>{escape(it['title'])}</title>",
                 f"<link>{escape(it.get('url') or args.base)}</link>",

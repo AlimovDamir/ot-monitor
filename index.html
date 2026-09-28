@@ -110,6 +110,28 @@ select{border:1px solid var(--line);border-radius:8px;background:var(--card);col
 .eff{margin-left:auto}
 .eff b{color:var(--ink);font-weight:500}
 .src a{text-decoration:none;border-bottom:1px dotted var(--ink-3)}
+/* before / after */
+.diff{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.diff summary{cursor:pointer;font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:8px;list-style:none;user-select:none}
+.diff summary::-webkit-details-marker{display:none}
+.diff summary::before{content:"";width:0;height:0;border:5px solid transparent;border-left:7px solid var(--ink-3);border-right:0;transition:transform .15s}
+.diff[open] summary::before{transform:rotate(90deg)}
+@media (prefers-reduced-motion:reduce){.diff summary::before{transition:none}}
+.diff summary b{font-weight:600;color:var(--ink)}
+.diff summary span{color:var(--ink-3)}
+.dl{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.d{border:1px solid var(--line-2);border-radius:6px;overflow:hidden}
+.d .w{font-size:12px;color:var(--ink-2);padding:6px 10px;background:var(--line-2)}
+.d .w b{font-weight:600;color:var(--ink)}
+.ba{display:grid;grid-template-columns:1fr 1fr}
+.ba > div{padding:8px 10px;font-size:13px;line-height:1.45;color:var(--ink)}
+.ba > div + div{border-left:1px solid var(--line-2)}
+.ba em{display:block;font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:3px}
+.ba .was em{color:var(--draft)}
+.ba .now em{color:var(--act)}
+.ba .was{background:color-mix(in srgb,var(--draft-soft) 45%,var(--card))}
+.ba .now{background:color-mix(in srgb,var(--act-soft) 45%,var(--card))}
+@media (max-width:560px){.ba{grid-template-columns:1fr}.ba > div + div{border-left:0;border-top:1px solid var(--line-2)}}
 .empty{padding:40px 16px;text-align:center;color:var(--ink-3);border:1px dashed var(--line);border-radius:8px;margin-top:22px}
 .state{font-size:13px;color:var(--ink-3);margin-top:22px}
 
@@ -264,6 +286,7 @@ aside{display:flex;flex-direction:column;gap:16px}
           <div class="meta"><span class="kind">${k.label}</span><span>${esc(it.source)}</span>${it.addedAt && it.addedAt!==it.date ? `<span class="mono">добавлено ${esc(fmtShort(it.addedAt))}</span>`:""}</div>
           <h3>${link}</h3>
           <p>${esc(it.summary)}</p>
+          ${diffBlock(it)}
           <div class="foot"><div class="topics">${topics}</div>${src}${eff}</div>
         </article>`;
       }
@@ -308,6 +331,13 @@ aside{display:flex;flex-direction:column;gap:16px}
     if (r.nothingNew?.length) body += `<p style="margin:8px 0 0;font-weight:500">Без изменений:</p><ul>${r.nothingNew.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
     if (r.unavailable?.length) body += `<p style="margin:8px 0 0;font-weight:500">Не открылись напрямую:</p><ul>${r.unavailable.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
     $("r-body").innerHTML = body || "<p>Подробностей нет.</p>";
+  }
+  function diffBlock(it){
+    const ch = Array.isArray(it.changes) ? it.changes.filter(c => c && (c.before || c.after)) : [];
+    if (!ch.length) return "";
+    const n = ch.length;
+    const rows = ch.map(c => `<div class="d">${c.where ? `<div class="w"><b>Где:</b> ${esc(c.where)}</div>` : ""}<div class="ba"><div class="was"><em>Было</em>${esc(c.before || "—")}</div><div class="now"><em>Стало</em>${esc(c.after || "—")}</div></div></div>`).join("");
+    return `<details class="diff"><summary><b>Было → Стало</b><span>${n} ${plural(n,"изменение","изменения","изменений")}</span></summary><div class="dl">${rows}</div></details>`;
   }
   function plural(n,a,b,c){ n=Math.abs(n)%100; const n1=n%10; if(n>10&&n<20) return c; if(n1>1&&n1<5) return b; if(n1===1) return a; return c; }
 
